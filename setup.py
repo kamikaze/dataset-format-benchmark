@@ -12,7 +12,7 @@ except VersionConflict:
 if __name__ == '__main__':
     ext_modules = [
         Extension(
-            'python3_project_template.extmod',
+            'dataset_format_benchmark.extmod',
             ['lib/extmod.c', ],
             include_dirs=['lib'],
             py_limited_api=True

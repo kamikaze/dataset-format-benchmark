@@ -1,5 +1,5 @@
 """
-    Dummy conftest.py for python3_project_template.
+    Dummy conftest.py for dataset_format_benchmark.
 
     If you don't know what this is for, just leave it empty.
     Read more about conftest.py under:

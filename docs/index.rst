@@ -1,8 +1,8 @@
 ========================
-python3_project_template
+dataset_format_benchmark
 ========================
 
-This is the documentation of **python3_project_template**.
+This is the documentation of **dataset_format_benchmark**.
 
 .. note::
 

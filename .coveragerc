@@ -1,7 +1,7 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-source = python3_project_template
+source = dataset_format_benchmark
 # omit = bad_file.py
 
 [paths]

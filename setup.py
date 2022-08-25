@@ -1,7 +1,7 @@
 import sys
 
 from pkg_resources import VersionConflict, require
-from setuptools import setup, Extension
+from setuptools import setup
 
 try:
     require('setuptools>=60.5')
@@ -10,13 +10,4 @@ except VersionConflict:
     sys.exit(1)
 
 if __name__ == '__main__':
-    ext_modules = [
-        Extension(
-            'dataset_format_benchmark.extmod',
-            ['lib/extmod.c', ],
-            include_dirs=['lib'],
-            py_limited_api=True
-        )
-    ]
-
-    setup(use_pyscaffold=True, ext_modules=ext_modules)
+    setup(use_pyscaffold=True)

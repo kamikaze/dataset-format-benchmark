@@ -1,6 +1,4 @@
-auditwheel
 pip
 setuptools
 twine
 wheel
-

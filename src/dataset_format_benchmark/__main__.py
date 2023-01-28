@@ -6,7 +6,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import torch.utils.data
 
-from dataset_format_benchmark.extmod import c_fib
 from dataset_format_benchmark.datasets import BaseDataset, PyTorchDataset
 from dataset_format_benchmark.datasets.kaggle.face_masks import FaceMasksDataset
 from dataset_format_benchmark.datasets.kaggle.wiki_art import WikiArtDataset

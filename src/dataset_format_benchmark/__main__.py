@@ -7,9 +7,6 @@ import matplotlib.pyplot as plt
 import torch.utils.data
 
 from dataset_format_benchmark.datasets import BaseDataset, PyTorchDataset
-from dataset_format_benchmark.datasets.kaggle.face_masks import FaceMasksDataset
-from dataset_format_benchmark.datasets.kaggle.wiki_art import WikiArtDataset
-from dataset_format_benchmark.datasets.nvidia.ffhq import NvidiaFFHQDataset
 from dataset_format_benchmark.datasets.own.transport import OwnTransportDataset
 from dataset_format_benchmark.models.inception import InceptionNet
 from dataset_format_benchmark.runner import benchmark_dataset
@@ -51,22 +48,22 @@ def main():
     learning_rate = 1e-8
     epochs = 100
 
-    datasets: list[BaseDataset] = [
+    datasets: tuple[BaseDataset] = (
         OwnTransportDataset(root=data_root_path),
         # FaceMasksDataset(root=data_root_path),
         # WikiArtDataset(root=data_root_path),
         # NvidiaFFHQDataset(root=data_root_path),
-    ]
-    storages: list[ImageFileStorage] = [
+    )
+    storages: tuple[ImageFileStorage] = (
         JPEGImageStorage(quality=100),
         PNGImageStorage(),
         BMPImageStorage(),
         TIFFImageStorage(),
-        WebPImageStorage(),
+        # WebPImageStorage(),
         # NumpyZipImageStorage(),
         # NumpyMmapImageStorage(),
         # CupyMmapImageStorage(),
-    ]
+    )
     models = (
         InceptionNet,
         # DenseNet,
@@ -76,12 +73,13 @@ def main():
     for dataset in datasets:
         dataset_class_name = dataset.__class__.__name__
 
+        for storage in storages:
+            dataset.add_storage(storage)
+
         logger.info(f'Loading dataset: {dataset_class_name}')
         dataset.load()
 
-        for storage in storages:
-            storage.store_dataset(dataset)
-            dataset.add_storage(storage)
+    return
 
     # Testing models against all dataset storages and models
     for dataset in datasets:

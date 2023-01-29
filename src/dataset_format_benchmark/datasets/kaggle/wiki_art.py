@@ -28,12 +28,12 @@ class WikiArtDataset(KaggleDataset):
         super().__init__(root, transform, target_transform)
 
         if self.METADATA_FILE_NAME:
-            self.metadata_file_path = Path(self.dataset_path, self.METADATA_FILE_NAME)
+            self.metadata_file_path = Path(self.dataset_root_path, self.METADATA_FILE_NAME)
         else:
             self.metadata_file_path = None
 
     def _download(self, force: bool = False):
-        if force or not self.dataset_path.exists():
+        if force or not self.dataset_root_path.exists():
             super()._download(force)
 
     @staticmethod
@@ -57,7 +57,7 @@ class WikiArtDataset(KaggleDataset):
     def _get_min_size(self, limit_size: Optional[int] = None):
         min_size = 999999
 
-        for _, image in self.iter_images(self.dataset_path, limit_size):
+        for _, image in self.iter_images(self.dataset_root_path, limit_size):
             width, height = image.size
 
             # Filter out images with any dimension smaller than self.IMAGE_WIDTH px
@@ -80,7 +80,7 @@ class WikiArtDataset(KaggleDataset):
 
             directories = sorted(
                 file_item.name
-                for file_item in filter(lambda i: i.is_dir() and i.name[0] != '.', self.dataset_path.iterdir())
+                for file_item in filter(lambda i: i.is_dir() and i.name[0] != '.', self.dataset_root_path.iterdir())
             )
 
             metadata = {
@@ -102,7 +102,7 @@ class DatasetWikiArtFilesystem(WikiArtDataset):
 
         self.image_dir_path.mkdir(exist_ok=True)
 
-        for idx, image in self.iter_images(self.dataset_path, size):
+        for idx, image in self.iter_images(self.dataset_root_path, size):
             crop_dir_path = Path(self.image_dir_path, str(idx))
             file_name = Path(image.filename).name
 
@@ -161,7 +161,7 @@ class DatasetWikiArtFilesystem(WikiArtDataset):
 class DatasetWikiArtZarr(WikiArtDataset):
     def __init__(self, root: Path, transform=None, target_transform=None, chunks=None):
         super().__init__(root, transform, target_transform)
-        self.dataset_file_path = Path(self.dataset_path, 'data.zarr')
+        self.dataset_file_path = Path(self.dataset_root_path, 'data.zarr')
         self.chunks = chunks
 
     def _prepare(self, force: bool = True):
@@ -228,12 +228,12 @@ class DatasetWikiArtNumpyMmap(WikiArtDataset):
 
     def __init__(self, root: Path, transform=None, target_transform=None):
         super().__init__(root, transform, target_transform)
-        self.dataset_file_path = Path(self.dataset_path, 'data.npy')
+        self.dataset_file_path = Path(self.dataset_root_path, 'data.npy')
 
     def __count_images(self, min_size: Optional[int] = None) -> int:
         cnt = sum(
             int(min(image.width, image.height) >= min_size)
-            for _, image in self.iter_images(self.dataset_path)
+            for _, image in self.iter_images(self.dataset_root_path)
         )
 
         return cnt
@@ -248,7 +248,7 @@ class DatasetWikiArtNumpyMmap(WikiArtDataset):
         )
         y = []
 
-        for idx, (dir_idx, image) in enumerate(self.iter_images(self.dataset_path, size)):
+        for idx, (dir_idx, image) in enumerate(self.iter_images(self.dataset_root_path, size)):
             file_name = Path(image.filename).name
 
             try:
@@ -314,12 +314,12 @@ class DatasetWikiArtCuPyMmap(WikiArtDataset):
 
     def __init__(self, root: Path, transform=None, target_transform=None):
         super().__init__(root, transform, target_transform)
-        self.dataset_file_path = Path(self.dataset_path, 'cupy_data.npz')
+        self.dataset_file_path = Path(self.dataset_root_path, 'cupy_data.npz')
 
     def __count_images(self, min_size: Optional[int] = None) -> int:
         cnt = sum(
             int(min(image.width, image.height) >= min_size)
-            for _, image in self.iter_images(self.dataset_path)
+            for _, image in self.iter_images(self.dataset_root_path)
         )
 
         return cnt
@@ -334,7 +334,7 @@ class DatasetWikiArtCuPyMmap(WikiArtDataset):
         )
         y = []
 
-        for idx, (dir_idx, image) in enumerate(self.iter_images(self.dataset_path, size)):
+        for idx, (dir_idx, image) in enumerate(self.iter_images(self.dataset_root_path, size)):
             file_name = Path(image.filename).name
 
             try:

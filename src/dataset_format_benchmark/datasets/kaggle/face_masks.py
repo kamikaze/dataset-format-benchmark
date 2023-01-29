@@ -38,9 +38,9 @@ class FaceMasksDataset(KaggleDataset):
         super().__init__(root, transform, target_transform)
 
         if self.DATASET_SUBDIR_NAME:
-            self.dataset_subdir_path = Path(self.dataset_path, self.DATASET_SUBDIR_NAME)
+            self.dataset_subdir_path = Path(self.dataset_root_path, self.DATASET_SUBDIR_NAME)
         else:
-            self.dataset_subdir_path = self.dataset_path
+            self.dataset_subdir_path = self.dataset_root_path
 
         if self.DATASET_FILE_NAME:
             self.dataset_file_path = Path(self.dataset_subdir_path, self.DATASET_FILE_NAME)
@@ -53,12 +53,12 @@ class FaceMasksDataset(KaggleDataset):
             self.metadata_file_path = None
 
     def _download(self, force: bool = False):
-        if force or not self.dataset_path.exists():
+        if force or not self.dataset_root_path.exists():
             super()._download(force)
 
-            second_file_path = Path(self.dataset_path, 'df_part_2.csv')
+            second_file_path = Path(self.dataset_root_path, 'df_part_2.csv')
 
-            with open(second_file_path) as fi, open(Path(self.dataset_path, 'df.csv'), 'a') as fo:
+            with open(second_file_path) as fi, open(Path(self.dataset_root_path, 'df.csv'), 'a') as fo:
                 next(fi)
                 fo.writelines(fi)
 
@@ -144,7 +144,7 @@ class FaceMasksDataset(KaggleDataset):
             image_set = self._resize_images(min_size)
             directories = sorted(
                 file_item.name
-                for file_item in filter(lambda i: i.is_dir() and i.name[0] != '.', self.dataset_path.iterdir())
+                for file_item in filter(lambda i: i.is_dir() and i.name[0] != '.', self.dataset_root_path.iterdir())
             )
 
             metadata = {

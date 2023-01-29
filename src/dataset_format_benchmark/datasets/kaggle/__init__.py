@@ -16,12 +16,12 @@ class KaggleDataset(BaseDataset, ABC):
         super().__init__(root, transform, target_transform)
 
         if self.IMAGE_DIR_NAME:
-            self.image_dir_path = Path(self.dataset_path, self.IMAGE_DIR_NAME)
+            self.image_dir_path = Path(self.dataset_root_path, self.IMAGE_DIR_NAME)
         else:
             self.image_dir_path = None
 
         if self.RESULT_FILE_NAME:
-            self.result_file_path = Path(self.dataset_path, self.RESULT_FILE_NAME)
+            self.result_file_path = Path(self.dataset_root_path, self.RESULT_FILE_NAME)
         else:
             self.result_file_path = None
 
@@ -37,8 +37,8 @@ class KaggleDataset(BaseDataset, ABC):
 
         if isinstance(self.DATASET_NAME, list):
             for dataset_name in self.DATASET_NAME:
-                kaggle.api.dataset_download_files(dataset_name, path=self.dataset_path, quiet=False, unzip=True,
+                kaggle.api.dataset_download_files(dataset_name, path=self.dataset_root_path, quiet=False, unzip=True,
                                                   force=force)
         else:
-            kaggle.api.dataset_download_files(self.DATASET_NAME, path=self.dataset_path, quiet=False, unzip=True,
+            kaggle.api.dataset_download_files(self.DATASET_NAME, path=self.dataset_root_path, quiet=False, unzip=True,
                                               force=force)

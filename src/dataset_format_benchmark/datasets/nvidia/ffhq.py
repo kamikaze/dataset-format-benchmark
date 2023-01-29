@@ -27,9 +27,9 @@ class NvidiaFFHQDataset(BaseDataset):
         super().__init__(root, transform, target_transform)
 
         if self.DATASET_SUBDIR_NAME:
-            self.dataset_subdir_path = Path(self.dataset_path, self.DATASET_SUBDIR_NAME)
+            self.dataset_subdir_path = Path(self.dataset_root_path, self.DATASET_SUBDIR_NAME)
         else:
-            self.dataset_subdir_path = self.dataset_path
+            self.dataset_subdir_path = self.dataset_root_path
 
         if self.DATASET_FILE_NAME:
             self.dataset_file_path = Path(self.dataset_subdir_path, self.DATASET_FILE_NAME)
@@ -42,7 +42,7 @@ class NvidiaFFHQDataset(BaseDataset):
             self.metadata_file_path = None
 
     def _download(self, force: bool = False):
-        if force or not self.dataset_path.exists():
+        if force or not self.dataset_root_path.exists():
             tasks = ('json', 'stats', 'images',)
             downloader.run(tasks)
 
@@ -125,7 +125,7 @@ class NvidiaFFHQDataset(BaseDataset):
             image_set = self._resize_images(min_size)
             directories = sorted(
                 file_item.name
-                for file_item in filter(lambda i: i.is_dir() and i.name[0] != '.', self.dataset_path.iterdir())
+                for file_item in filter(lambda i: i.is_dir() and i.name[0] != '.', self.dataset_root_path.iterdir())
             )
 
             metadata = {

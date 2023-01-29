@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Generator
 
 import torch
 import torch.utils.data
@@ -19,8 +19,8 @@ class BaseDataset(torch.utils.data.Dataset, ABC):
         super().__init__()
         self.device = torch.device('cuda' if USE_CUDA else 'cpu')
         self.data_length = 0
-        self.dataset_path = Path(root, self.DATASET_DIR_NAME)
-        self.metadata_file_path = Path(self.dataset_path, 'metadata_fs.json')
+        self.dataset_root_path = Path(root, self.DATASET_DIR_NAME)
+        self.metadata_file_path = Path(self.dataset_root_path, 'metadata_fs.json')
         self.storages: list[ImageFileStorage] = []
 
     def add_storage(self, storage: ImageFileStorage):
@@ -29,9 +29,15 @@ class BaseDataset(torch.utils.data.Dataset, ABC):
     def get_storages(self) -> list[ImageFileStorage]:
         return self.storages
 
-    @staticmethod
+    def iter_files(self, root: Path, recursive: bool = True) -> Generator[Path, None, None]:
+        for item in root.iterdir():
+            if item.is_file():
+                yield item
+            elif item.is_dir() and recursive and not item.name.startswith('.'):
+                yield from self.iter_files(item)
+
     @abstractmethod
-    def iter_images(root: Path, min_size: Optional[int] = None) -> Iterator:
+    def iter_images(self, root: Path) -> Iterator:
         pass
 
     def _download(self, force: bool = False):

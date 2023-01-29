@@ -30,7 +30,7 @@ class DatasetFlickrImage(KaggleDataset):
         super().__init__(root, transform, target_transform)
 
     def _download(self, force: bool = False):
-        if force or not self.dataset_path.exists():
+        if force or not self.dataset_root_path.exists():
             super()._download(force)
             # Removing duplicated data
             rmtree(Path(self.image_dir_path, self.DATASET_DIR_NAME), ignore_errors=True)
@@ -90,7 +90,7 @@ class DatasetFlickrImageFilesystem(DatasetFlickrImage):
 class DatasetFlickrImageZarr(DatasetFlickrImage):
     def __init__(self, root: Path, transform=None, target_transform=None, chunks=None):
         super().__init__(root, transform, target_transform)
-        self.dataset_file_path = Path(self.dataset_path, 'data.zarr')
+        self.dataset_file_path = Path(self.dataset_root_path, 'data.zarr')
         self.chunks = chunks
 
     def _prepare(self, force: bool = True):

@@ -20,7 +20,7 @@ class ImageFileStorage(ABC):
         return self.DATASET_SUBDIR_NAME
 
     def store_dataset(self, dataset):
-        dataset_subdir_path: Path = dataset.dataset_path / str(self)
+        dataset_subdir_path: Path = dataset.dataset_root_path / str(self)
         dataset_subdir_path.mkdir(exist_ok=True)
 
         for image in dataset.iter_images():

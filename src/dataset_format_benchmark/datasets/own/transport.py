@@ -56,9 +56,9 @@ class OwnTransportDataset(BaseDataset):
                         continue
 
                     params = Params(
-                        demosaic_algorithm=DemosaicAlgorithm.AMAZE, dcb_iterations=2, dcb_enhance=True,
-                        median_filter_passes=2, use_camera_wb=True, output_color=color_space, output_bps=bps,
-                        no_auto_bright=True, adjust_maximum_thr=0.75, bright=1.0
+                        demosaic_algorithm=DemosaicAlgorithm.DCB, dcb_iterations=1, dcb_enhance=True,
+                        median_filter_passes=1, use_camera_wb=True, output_color=color_space, output_bps=bps,
+                        no_auto_bright=True
                     )
                     processed_image = np.asarray(rawpy.imread(str(raw_image_path)).postprocess(params))
                     storage_dir_name = storage.IMAGE_FILE_EXTENSION

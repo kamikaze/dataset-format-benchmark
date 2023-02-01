@@ -56,8 +56,8 @@ class OwnTransportDataset(BaseDataset):
                         continue
 
                     params = Params(
-                        demosaic_algorithm=DemosaicAlgorithm.DCB, dcb_iterations=1, dcb_enhance=True,
-                        median_filter_passes=1, use_camera_wb=True, output_color=color_space, output_bps=bps,
+                        # demosaic_algorithm=DemosaicAlgorithm.DCB, dcb_iterations=1, dcb_enhance=True,
+                        median_filter_passes=0, use_camera_wb=True, output_color=color_space, output_bps=bps,
                         no_auto_bright=True
                     )
                     processed_image = np.asarray(rawpy.imread(str(raw_image_path)).postprocess(params))

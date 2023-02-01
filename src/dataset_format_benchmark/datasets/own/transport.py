@@ -6,8 +6,10 @@ from typing import Generator
 import imageio
 import numpy as np
 import rawpy
+from rawpy._rawpy import ColorSpace, Params, HighlightMode, FBDDNoiseReductionMode, DemosaicAlgorithm
 
 from dataset_format_benchmark.datasets import BaseDataset
+from dataset_format_benchmark.storages.fs import JPEGImageStorage, BMPImageStorage, WebPImageStorage
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -36,19 +38,40 @@ class OwnTransportDataset(BaseDataset):
         )
 
     def _convert_raw(self, raw_image_path: Path):
+        eight_bit_storages = {JPEGImageStorage, BMPImageStorage, WebPImageStorage}
+        bpses = (8, 16, )
+        color_spaces = (
+            ColorSpace.sRGB,
+            ColorSpace.Adobe,
+            ColorSpace.ACES,
+            ColorSpace.ProPhoto,
+            ColorSpace.XYZ,
+            ColorSpace.Wide
+        )
+
         for storage in self.storages:
-            processed_image = np.asarray(rawpy.imread(str(raw_image_path)).postprocess())
-            storage_dir_name = storage.IMAGE_FILE_EXTENSION
-            target_dir_path = Path(raw_image_path.parent, f'.{storage_dir_name}')
+            for color_space in color_spaces:
+                for bps in bpses:
+                    if bps == 16 and type(storage) in eight_bit_storages:
+                        continue
 
-            target_dir_path.mkdir(exist_ok=True)
+                    params = Params(
+                        demosaic_algorithm=DemosaicAlgorithm.AMAZE, dcb_iterations=2, dcb_enhance=True,
+                        median_filter_passes=2, use_camera_wb=True, output_color=color_space, output_bps=bps,
+                        no_auto_bright=True, adjust_maximum_thr=0.75, bright=1.0
+                    )
+                    processed_image = np.asarray(rawpy.imread(str(raw_image_path)).postprocess(params))
+                    storage_dir_name = storage.IMAGE_FILE_EXTENSION
+                    target_dir_path = Path(raw_image_path.parent, f'.{storage_dir_name}_{bps}_{color_space}')
 
-            dst_file_path = Path(target_dir_path, f'{raw_image_path.name}.{storage.IMAGE_FILE_EXTENSION}')
+                    target_dir_path.mkdir(exist_ok=True)
 
-            logger.info(f'Converting {str(raw_image_path)} to {storage_dir_name}')
-            imageio.imsave(dst_file_path, processed_image)
+                    dst_file_path = Path(target_dir_path, f'{raw_image_path.name}.{storage.IMAGE_FILE_EXTENSION}')
 
-            logger.info(f'Saved converted image in: {str(dst_file_path)}')
+                    logger.info(f'Converting {str(raw_image_path)} to {storage_dir_name}')
+                    imageio.imsave(dst_file_path, processed_image)
+
+                    logger.info(f'Saved converted image in: {str(dst_file_path)}')
 
     def _convert_raws(self, root: Path):
         with concurrent.futures.ProcessPoolExecutor() as executor:

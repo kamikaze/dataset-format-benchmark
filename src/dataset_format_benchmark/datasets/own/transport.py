@@ -9,7 +9,7 @@ import rawpy
 from rawpy._rawpy import ColorSpace, Params, HighlightMode, FBDDNoiseReductionMode, DemosaicAlgorithm
 
 from dataset_format_benchmark.datasets import BaseDataset
-from dataset_format_benchmark.storages.fs import JPEGImageStorage, BMPImageStorage, WebPImageStorage
+from dataset_format_benchmark.storages.fs import JPEGImageStorage, BMPImageStorage, WebPImageStorage, PNGImageStorage
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class OwnTransportDataset(BaseDataset):
         )
 
     def _convert_raw(self, raw_image_path: Path):
-        eight_bit_storages = {JPEGImageStorage, BMPImageStorage, WebPImageStorage}
+        eight_bit_storages = {JPEGImageStorage, BMPImageStorage, PNGImageStorage, WebPImageStorage}
         bpses = (8, 16, )
         color_spaces = (
             ColorSpace.sRGB,
@@ -55,14 +55,16 @@ class OwnTransportDataset(BaseDataset):
                     if bps == 16 and type(storage) in eight_bit_storages:
                         continue
 
+                    raw_image = rawpy.imread(str(raw_image_path))
                     params = Params(
                         # demosaic_algorithm=DemosaicAlgorithm.DCB, dcb_iterations=1, dcb_enhance=True,
                         median_filter_passes=0, use_camera_wb=True, output_color=color_space, output_bps=bps,
                         no_auto_bright=True
                     )
-                    processed_image = np.asarray(rawpy.imread(str(raw_image_path)).postprocess(params))
+                    processed_image = np.asarray(raw_image.postprocess(params))
                     storage_dir_name = storage.IMAGE_FILE_EXTENSION
-                    target_dir_path = Path(raw_image_path.parent, f'.{storage_dir_name}_{bps}_{color_space}')
+                    color_space_name = str(color_space).split('.')[-1]
+                    target_dir_path = Path(raw_image_path.parent, f'.{storage_dir_name}_{bps}_{color_space_name}')
 
                     target_dir_path.mkdir(exist_ok=True)
 

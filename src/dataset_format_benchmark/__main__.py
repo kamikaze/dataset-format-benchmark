@@ -2,6 +2,7 @@ import argparse
 import logging
 import time
 from pathlib import Path
+from typing import Sequence
 
 import matplotlib.pyplot as plt
 import torch.utils.data
@@ -48,13 +49,13 @@ def main():
     learning_rate = 1e-8
     epochs = 100
 
-    datasets: tuple[BaseDataset] = (
+    datasets: Sequence = (
         OwnTransportDataset(root=data_root_path),
         # FaceMasksDataset(root=data_root_path),
         # WikiArtDataset(root=data_root_path),
         # NvidiaFFHQDataset(root=data_root_path),
     )
-    storages: tuple[ImageFileStorage] = (
+    storages: Sequence = (
         JPEGImageStorage(quality=100),
         PNGImageStorage(),
         BMPImageStorage(),
@@ -64,7 +65,7 @@ def main():
         # NumpyMmapImageStorage(),
         # CupyMmapImageStorage(),
     )
-    models = (
+    models: Sequence = (
         InceptionNet,
         # DenseNet,
     )
@@ -78,8 +79,6 @@ def main():
 
         logger.info(f'Loading dataset: {dataset_class_name}')
         dataset.load()
-
-    return
 
     # Testing models against all dataset storages and models
     for dataset in datasets:

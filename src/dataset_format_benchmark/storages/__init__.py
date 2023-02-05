@@ -1,7 +1,7 @@
 import json
 from abc import ABC
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy as np
 import torch
@@ -15,6 +15,10 @@ class ImageFileStorage(ABC):
     IMAGE_FILE_EXTENSION = ''
     DATASET_SUBDIR_NAME = f'{IMAGE_FILE_EXTENSION}_files'
     METADATA_FILE_NAME = 'metadata.json'
+    SUPPORTED_BPS: tuple[int] = ()
+
+    def __init__(self, color_spaces: Sequence):
+        self.color_spaces = color_spaces
 
     def __str__(self):
         return self.DATASET_SUBDIR_NAME

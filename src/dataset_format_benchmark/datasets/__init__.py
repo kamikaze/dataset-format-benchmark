@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Iterator, Optional, Generator
+from typing import Iterator, Generator, Sequence
 
 import torch
 import torch.utils.data
@@ -21,6 +21,7 @@ class BaseDataset(torch.utils.data.Dataset, ABC):
         self.data_length = 0
         self.dataset_root_path = Path(root, self.DATASET_DIR_NAME)
         self.metadata_file_path = Path(self.dataset_root_path, 'metadata_fs.json')
+        self.filenames: Sequence[str] = []
         self.storages: list[ImageFileStorage] = []
 
     def add_storage(self, storage: ImageFileStorage):
@@ -56,13 +57,14 @@ class BaseDataset(torch.utils.data.Dataset, ABC):
 
 
 class PyTorchDataset(torch.utils.data.Dataset):
-    def __init__(self, storage: ImageFileStorage, transform=None, target_transform=None):
+    def __init__(self, dataset: BaseDataset, storage: ImageFileStorage, transform=None, target_transform=None):
         super().__init__()
         self.device = torch.device('cuda' if USE_CUDA else 'cpu')
+        self.dataset = dataset
         self.storage = storage
 
     def __getitem__(self, index) -> T_co:
-        return self.storage[index]
+        return self.storage[self.dataset[index]]
 
     def __len__(self):
-        return len(self.storage)
+        return len(self.dataset)

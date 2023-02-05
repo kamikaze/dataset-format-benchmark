@@ -1,15 +1,15 @@
 import concurrent.futures
 import logging
+import multiprocessing
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Sequence
 
 import imageio
 import numpy as np
 import rawpy
-from rawpy._rawpy import ColorSpace, Params, HighlightMode, FBDDNoiseReductionMode, DemosaicAlgorithm
+from rawpy._rawpy import Params
 
 from dataset_format_benchmark.datasets import BaseDataset
-from dataset_format_benchmark.storages.fs import JPEGImageStorage, BMPImageStorage, WebPImageStorage, PNGImageStorage
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -38,23 +38,10 @@ class OwnTransportDataset(BaseDataset):
         )
 
     def _convert_raw(self, raw_image_path: Path):
-        eight_bit_storages = {JPEGImageStorage, BMPImageStorage, PNGImageStorage, WebPImageStorage}
-        bpses = (8, 16, )
-        color_spaces = (
-            ColorSpace.sRGB,
-            ColorSpace.Adobe,
-            ColorSpace.ACES,
-            ColorSpace.ProPhoto,
-            ColorSpace.XYZ,
-            ColorSpace.Wide
-        )
-
+        # with semaphore:
         for storage in self.storages:
-            for color_space in color_spaces:
-                for bps in bpses:
-                    if bps == 16 and type(storage) in eight_bit_storages:
-                        continue
-
+            for color_space in storage.color_spaces:
+                for bps in storage.SUPPORTED_BPS:
                     raw_image = rawpy.imread(str(raw_image_path))
                     params = Params(
                         # demosaic_algorithm=DemosaicAlgorithm.DCB, dcb_iterations=1, dcb_enhance=True,
@@ -75,13 +62,18 @@ class OwnTransportDataset(BaseDataset):
 
                     logger.info(f'Saved converted image in: {str(dst_file_path)}')
 
-    def _convert_raws(self, root: Path):
-        with concurrent.futures.ProcessPoolExecutor() as executor:
+    def _convert_raws(self, root: Path) -> Sequence[str]:
+        filenames = []
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=multiprocessing.cpu_count() * 2) as executor:
+            # semaphore = multiprocessing.Semaphore(multiprocessing.cpu_count())
+
             for image_path in self.iter_images(root):
                 executor.submit(self._convert_raw, image_path)
+                filenames.append(image_path.name)
 
-        pass
+        return filenames
 
     def _prepare(self, force: bool = True):
         if force or not self.metadata_file_path.exists():
-            self._convert_raws(self.dataset_root_path)
+            self.filenames = self._convert_raws(self.dataset_root_path)

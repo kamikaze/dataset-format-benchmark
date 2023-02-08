@@ -1,5 +1,8 @@
 import argparse
 import time
+from collections import deque
+from functools import partial
+from itertools import repeat
 
 try:
     import cupy as cp
@@ -73,28 +76,26 @@ def test_matmul_wise(module, array, diag):
         assert module.array_equal(multiplied_matrices, expected_matrix)
 
 
-def benchmark_matmul(module, array, diag, first_matrix_size: tuple[int], second_matrix_size: tuple[int],
-                     repetitions: int) -> int:
+def benchmark_matmul(module, array, first_matrix, second_matrix, repetitions: int) -> int:
     start = time.perf_counter_ns()
 
-    for _ in range(repetitions):
-        first_matrix = array(np.random.randn(*first_matrix_size).astype(dtype=np.float64))
-        second_matrix = array(np.random.randn(*second_matrix_size).astype(dtype=np.float64))
-        result = module.matmul(first_matrix, second_matrix)
+    if module == np:
+        matmul_partial = partial(module.matmul, first_matrix)
+        deque(map(matmul_partial, repeat(second_matrix, repetitions)))
+    elif module == cp:
+        for _ in range(repetitions):
+            first_matrix_mod = array(first_matrix)
+            second_matrix_mod = array(second_matrix)
+            module.dot(first_matrix_mod, second_matrix_mod)
+            module.cuda.Device().synchronize()
+    else:
+        use_cuda = torch.cuda.is_available()
+        device = torch.device('cuda' if use_cuda else 'cpu')
 
-    end = time.perf_counter_ns()
-
-    return end - start
-
-
-def benchmark_matmul_wise(module, array, first_matrix_size: tuple[int], second_matrix_size: tuple[int],
-                          repetitions: int = 100) -> int:
-    start = time.perf_counter_ns()
-
-    for _ in range(repetitions):
-        first_matrix = module.diag(array(np.random.rand(*first_matrix_size)))
-        second_matrix = array(np.random.rand(*second_matrix_size))
-        result = module.matmul(first_matrix, second_matrix)
+        for _ in range(repetitions):
+            first_matrix_mod = array(first_matrix, device=device)
+            second_matrix_mod = array(second_matrix, device=device)
+            module.matmul(first_matrix_mod, second_matrix_mod)
 
     end = time.perf_counter_ns()
 
@@ -126,6 +127,8 @@ def main():
     }
 
     if cp:
+        mempool = cp.cuda.MemoryPool(cp.cuda.malloc_managed)
+        cp.cuda.set_allocator(mempool.malloc)
         modules['cupy'] = (cp, cp.array, cp.diag)
 
     for (module, array, diag) in modules.values():
@@ -135,17 +138,27 @@ def main():
     print(f'{"Benchmark":<10}{"First matrix":<15}{"Second matrix":<15}{"Mode":<10}{"Score":<25}{"Units":<10}')
 
     for module_name, (module, array, diag) in modules.items():
-        if len(first_matrix_size) == 1:
-            duration_ns = benchmark_matmul_wise(module, array, first_matrix_size, second_matrix_size, args.repetitions)
-        else:
-            duration_ns = benchmark_matmul(module, array, diag, first_matrix_size, second_matrix_size, args.repetitions)
+        first_matrix = np.random.rand(*first_matrix_size).astype(dtype=np.float64)
+        second_matrix = np.random.rand(*second_matrix_size).astype(dtype=np.float64)
 
-        rate = duration_ns / 1000.0 / args.repetitions
+        if len(first_matrix_size) == 1:
+            first_matrix = np.diag(first_matrix)
+
+        duration_ns = benchmark_matmul(module, array, first_matrix, second_matrix, args.repetitions)
+        duration_ms = duration_ns * 0.000001
+        rate = duration_ms / args.repetitions
 
         print(f'{module_name:<10}{args.first_matrix_size:<15}{args.second_matrix_size:<15}{"avgt":<10}'
               f'{str(rate):<25}{"ms/op":<10}')
         print(f'{module_name:<10}{args.first_matrix_size:<15}{args.second_matrix_size:<15}{"thrpt":<10}'
               f'{str(1.0 / rate):<25}{"op/ms":<10}')
+
+    if cp:
+        mempool.free_all_blocks()
+        mempool = cp.get_default_memory_pool()
+        pinned_mempool = cp.get_default_pinned_memory_pool()
+        mempool.free_all_blocks()
+        pinned_mempool.free_all_blocks()
 
 
 if __name__ == '__main__':

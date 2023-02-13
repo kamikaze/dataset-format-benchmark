@@ -3,6 +3,7 @@ from abc import ABC
 from pathlib import Path
 from typing import Optional, Sequence
 
+import imageio as iio
 import numpy as np
 import torch
 from PIL import Image
@@ -23,17 +24,9 @@ class ImageFileStorage(ABC):
     def __str__(self):
         return self.DATASET_SUBDIR_NAME
 
-    def store_dataset(self, dataset):
-        dataset_subdir_path: Path = dataset.dataset_root_path / str(self)
-        dataset_subdir_path.mkdir(exist_ok=True)
-
-        for image in dataset.iter_images():
-            out_file_path = dataset_subdir_path / image.filename
-            self._save_image(image, out_file_path)
-
     @classmethod
-    def _save_image(cls, image, out_file_path: Path):
-        image.save(out_file_path)
+    def save_image(cls, dst_file_path: Path, image: np.ndarray):
+        iio.imwrite(dst_file_path, image)
 
     def _resize_images(self, size: Optional[int] = None):
         item_count = self.dataset._count_images(size)

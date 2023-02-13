@@ -12,6 +12,7 @@ from dataset_format_benchmark.datasets import PyTorchDataset
 from dataset_format_benchmark.datasets.own.transport import OwnTransportDataset
 from dataset_format_benchmark.models.inception import InceptionNet
 from dataset_format_benchmark.runner import benchmark_dataset
+from dataset_format_benchmark.storages.containers import NumpyZipImageStorage
 from dataset_format_benchmark.storages.fs import (
     JPEGImageStorage, PNGImageStorage, BMPImageStorage, TIFFImageStorage
 )
@@ -57,19 +58,23 @@ def main():
     )
     color_spaces = (
         ColorSpace.sRGB,
-        ColorSpace.Adobe,
-        ColorSpace.ACES,
-        ColorSpace.ProPhoto,
-        ColorSpace.XYZ,
-        ColorSpace.Wide
+        # ColorSpace.Adobe,
+        # ColorSpace.ACES,
+        # ColorSpace.ProPhoto,
+        # ColorSpace.XYZ,
+        # ColorSpace.Wide
     )
     storages: Sequence = (
         JPEGImageStorage(quality=100, color_spaces=color_spaces),
-        PNGImageStorage(),
-        BMPImageStorage(),
-        TIFFImageStorage(),
+        JPEGImageStorage(quality=75, color_spaces=color_spaces),
+        JPEGImageStorage(quality=50, color_spaces=color_spaces),
+        JPEGImageStorage(quality=25, color_spaces=color_spaces),
+        JPEGImageStorage(quality=10, color_spaces=color_spaces),
+        PNGImageStorage(color_spaces=color_spaces),
+        BMPImageStorage(color_spaces=color_spaces),
+        TIFFImageStorage(color_spaces=color_spaces),
         # WebPImageStorage(),
-        # NumpyZipImageStorage(),
+        NumpyZipImageStorage(color_spaces=color_spaces),
         # NumpyMmapImageStorage(),
         # CupyMmapImageStorage(),
     )

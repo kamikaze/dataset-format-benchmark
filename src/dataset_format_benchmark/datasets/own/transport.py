@@ -4,7 +4,6 @@ import multiprocessing
 from pathlib import Path
 from typing import Generator, Sequence
 
-import imageio
 import numpy as np
 import rawpy
 from rawpy._rawpy import Params
@@ -58,7 +57,8 @@ class OwnTransportDataset(BaseDataset):
                     dst_file_path = Path(target_dir_path, f'{raw_image_path.name}.{storage.IMAGE_FILE_EXTENSION}')
 
                     logger.info(f'Converting {str(raw_image_path)} to {storage_dir_name}')
-                    imageio.imsave(dst_file_path, processed_image)
+
+                    storage.save_image(dst_file_path, processed_image)
 
                     logger.info(f'Saved converted image in: {str(dst_file_path)}')
 

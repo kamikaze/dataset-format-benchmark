@@ -20,8 +20,14 @@ class JPEGImageStorage(ImageFileStorage):
     def __str__(self):
         return f'{self.DATASET_SUBDIR_NAME}_{self.quality}'
 
-    def save_image(self, dst_file_path: Path, image: np.ndarray):
-        iio.imwrite(dst_file_path, image, quality=self.quality)
+    def _get_full_dst_file_path(self, target_dir_path: Path, file_name: str, bits: int, color_space: str):
+        dst_dir_path = Path(target_dir_path, f'.{self.IMAGE_FILE_EXTENSION}{str(bits)}{color_space}{self.quality}')
+        dst_dir_path.mkdir(exist_ok=True)
+
+        return Path(dst_dir_path, f'{file_name}.{self.IMAGE_FILE_EXTENSION}')
+
+    def _save_image(self, dst_path: Path, image: np.ndarray):
+        iio.imwrite(dst_path, image, quality=self.quality)
 
 
 class PNGImageStorage(ImageFileStorage):
@@ -30,9 +36,8 @@ class PNGImageStorage(ImageFileStorage):
     METADATA_FILE_NAME = 'metadata.json'
     SUPPORTED_BPS = (8, )
 
-    @classmethod
-    def save_image(cls, dst_file_path: Path, image: np.ndarray):
-        iio.imwrite(dst_file_path, image, optimize=True)
+    def _save_image(self, dst_path: Path, image: np.ndarray):
+        iio.imwrite(dst_path, image, optimize=True)
 
 
 class BMPImageStorage(ImageFileStorage):

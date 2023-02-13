@@ -1,4 +1,5 @@
 import json
+import logging
 from abc import ABC
 from pathlib import Path
 from typing import Optional, Sequence
@@ -10,6 +11,9 @@ from PIL import Image
 from torch.nn import functional
 
 from dataset_format_benchmark.datasets.utils import adjust_image
+
+
+logger = logging.getLogger(__name__)
 
 
 class ImageFileStorage(ABC):
@@ -24,9 +28,20 @@ class ImageFileStorage(ABC):
     def __str__(self):
         return self.DATASET_SUBDIR_NAME
 
-    @classmethod
-    def save_image(cls, dst_file_path: Path, image: np.ndarray):
-        iio.imwrite(dst_file_path, image)
+    def _get_full_dst_file_path(self, target_dir_path: Path, file_name: str, bits: int, color_space: str):
+        dst_dir_path = Path(target_dir_path, f'.{self.IMAGE_FILE_EXTENSION}{str(bits)}{color_space}')
+        dst_dir_path.mkdir(exist_ok=True)
+
+        return Path(dst_dir_path, f'{file_name}.{self.IMAGE_FILE_EXTENSION}')
+
+    def _save_image(self, dst_path: Path, image: np.ndarray):
+        iio.imwrite(dst_path, image)
+
+    def save_image(self, target_dir_path: Path, file_name: str, bits: int, color_space: str, image: np.ndarray):
+        dst_path = self._get_full_dst_file_path(target_dir_path, file_name, bits, color_space)
+        self._save_image(dst_path, image)
+
+        logger.info(f'Saved converted image in: {str(dst_path)}')
 
     def _resize_images(self, size: Optional[int] = None):
         item_count = self.dataset._count_images(size)
@@ -50,7 +65,7 @@ class ImageFileStorage(ABC):
                 label_dir_path = Path(self.dataset.dataset_subdir_path, label)
                 label_dir_path.mkdir(exist_ok=True)
                 out_file_path = Path(label_dir_path, file_name)
-                self._save_image(image, out_file_path)
+                self._save_image(out_file_path, image)
 
                 x.append(f'{label}/{file_name}')
                 y.append(int(label) - 1)

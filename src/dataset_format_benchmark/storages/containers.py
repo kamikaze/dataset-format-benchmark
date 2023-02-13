@@ -19,9 +19,8 @@ class NumpyZipImageStorage(ImageFileStorage):
     def __str__(self):
         return f'{self.DATASET_SUBDIR_NAME}'
 
-    @classmethod
-    def save_image(cls, dst_file_path: Path, image: np.ndarray):
-        np.savez_compressed(dst_file_path, image)
+    def _save_image(self, dst_path: Path, image: np.ndarray):
+        np.savez_compressed(dst_path, image)
 
 
 # class NumpyZipImageStorage(ImageFileStorage):

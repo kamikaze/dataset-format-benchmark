@@ -40,27 +40,21 @@ class OwnTransportDataset(BaseDataset):
         # with semaphore:
         for storage in self.storages:
             for color_space in storage.color_spaces:
-                for bps in storage.SUPPORTED_BPS:
+                for bits in storage.SUPPORTED_BPS:
                     raw_image = rawpy.imread(str(raw_image_path))
                     params = Params(
                         # demosaic_algorithm=DemosaicAlgorithm.DCB, dcb_iterations=1, dcb_enhance=True,
-                        median_filter_passes=0, use_camera_wb=True, output_color=color_space, output_bps=bps,
+                        median_filter_passes=0, use_camera_wb=True, output_color=color_space, output_bps=bits,
                         no_auto_bright=True
                     )
                     processed_image = np.asarray(raw_image.postprocess(params))
                     storage_dir_name = storage.IMAGE_FILE_EXTENSION
                     color_space_name = str(color_space).split('.')[-1]
-                    target_dir_path = Path(raw_image_path.parent, f'.{storage_dir_name}_{bps}_{color_space_name}')
-
-                    target_dir_path.mkdir(exist_ok=True)
-
-                    dst_file_path = Path(target_dir_path, f'{raw_image_path.name}.{storage.IMAGE_FILE_EXTENSION}')
 
                     logger.info(f'Converting {str(raw_image_path)} to {storage_dir_name}')
 
-                    storage.save_image(dst_file_path, processed_image)
-
-                    logger.info(f'Saved converted image in: {str(dst_file_path)}')
+                    storage.save_image(raw_image_path.parent, raw_image_path.name, bits, color_space_name,
+                                       processed_image)
 
     def _convert_raws(self, root: Path) -> Sequence[str]:
         filenames = []

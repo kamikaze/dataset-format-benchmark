@@ -1,0 +1,7 @@
+dist
+.eggs
+.github
+build
+venv
+*.swp
+**/*.egg-info

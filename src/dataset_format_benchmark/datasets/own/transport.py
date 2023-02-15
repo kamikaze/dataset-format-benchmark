@@ -37,11 +37,11 @@ class OwnTransportDataset(BaseDataset):
         )
 
     def _convert_raw(self, raw_image_path: Path):
-        # with semaphore:
+        raw_image = rawpy.imread(str(raw_image_path))
+
         for storage in self.storages:
             for color_space in storage.color_spaces:
                 for bits in storage.SUPPORTED_BPS:
-                    raw_image = rawpy.imread(str(raw_image_path))
                     params = Params(
                         # demosaic_algorithm=DemosaicAlgorithm.DCB, dcb_iterations=1, dcb_enhance=True,
                         median_filter_passes=0, use_camera_wb=True, output_color=color_space, output_bps=bits,

@@ -1,4 +1,4 @@
-FROM python:3.10-slim as build-image
+FROM python:3.11-slim as build-image
 
 WORKDIR /usr/local/bin/deployment
 
@@ -22,11 +22,11 @@ RUN  export APP_HOME=/usr/local/bin/deployment \
          && python3 -m pip install -U pip \
          && python3 -m pip install -U setuptools \
          && python3 -m pip install -U wheel \
-         && python3 -m pip install -U --pre torch torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cu117 \
-         && python3 -m pip install -U dataset_format_benchmark --find-links=/tmp/build/dist)
+         && python3 -m pip install -U --pre torch\<2.0.0 torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cu118 \
+         && python3 -m pip install -U /tmp/build/dist/*.whl)
 
 
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 ENV  PYTHONPATH=/usr/local/bin/deployment
 

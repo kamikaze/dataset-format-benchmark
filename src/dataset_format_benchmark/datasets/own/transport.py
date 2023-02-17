@@ -59,7 +59,7 @@ class OwnTransportDataset(BaseDataset):
     def _convert_raws(self, root: Path) -> Sequence[str]:
         filenames = []
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=multiprocessing.cpu_count() * 2) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
             # semaphore = multiprocessing.Semaphore(multiprocessing.cpu_count())
 
             for image_path in self.iter_images(root):

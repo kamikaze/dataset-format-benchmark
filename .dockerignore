@@ -1,8 +1,7 @@
-dist
-.eggs
-.github
-build
-docs
-venv
-*.swp
-**/*.egg-info
+*
+
+# Allow files and directories
+!/src
+!requirements.txt
+!setup.cfg
+!setup.py

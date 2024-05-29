@@ -3,5 +3,6 @@
 # Allow files and directories
 !/src
 !requirements.txt
+!requirements_dev.txt
 !setup.cfg
 !setup.py

@@ -1,4 +1,4 @@
-FROM python:3.11-slim as build-image
+FROM python:3.12-slim as build-image
 
 WORKDIR /usr/local/bin/deployment
 
@@ -26,7 +26,7 @@ RUN  export APP_HOME=/usr/local/bin/deployment \
          && python3 -m pip install -U /tmp/build/dist/*.whl)
 
 
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 ENV  PYTHONPATH=/usr/local/bin/deployment
 

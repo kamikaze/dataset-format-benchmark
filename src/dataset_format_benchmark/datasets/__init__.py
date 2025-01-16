@@ -4,7 +4,6 @@ from typing import Iterator, Generator, Sequence
 
 import torch
 import torch.utils.data
-from torch.utils.data.dataset import T_co
 
 from dataset_format_benchmark.storages import ImageFileStorage
 
@@ -63,7 +62,7 @@ class PyTorchDataset(torch.utils.data.Dataset):
         self.dataset = dataset
         self.storage = storage
 
-    def __getitem__(self, index) -> T_co:
+    def __getitem__(self, index):
         return self.storage[self.dataset[index]]
 
     def __len__(self):

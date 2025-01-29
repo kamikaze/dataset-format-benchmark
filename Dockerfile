@@ -44,7 +44,6 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
 COPY --from=build-image /build/wheels /wheels
-
 #COPY --from=build-image /lib/linux-gnu/* /lib/linux-gnu/
 #COPY --from=build-image /usr/lib/linux-gnu/* /usr/lib/linux-gnu/
 
@@ -53,11 +52,9 @@ COPY --from=build-image /build/wheels /wheels
 #    cp /usr/lib/linux-gnu/* /usr/lib/${ARCH}-linux-gnu/ && \
 #    rm -rf /lib/linux-gnu /usr/lib/linux-gnu
 
-
-
 WORKDIR /app
 
-RUN python3 -m pip install -U --pre torch torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cu126 && \
+RUN python3 -m pip install -U --pre torch\<2.7.0 torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cu126 && \
     python3 -m pip install --no-cache /wheels/* && \
     apt clean && \
     groupadd -r appgroup && \

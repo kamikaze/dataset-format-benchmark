@@ -1,18 +1,8 @@
 name: Continuous Integration
 
 on:
-  push:
-    paths:
-      - '.github/workflows/docker-publish.yaml'
-      - 'src/**'
-      - 'tests/**'
-      - 'Dockerfile'
-      - 'pyproject.toml'
-      - 'requirements.txt'
-      - 'setup.cfg'
-      - 'setup.py'
-    tags:
-      - 'v*'
+  release:
+    types: [published]
 
 env:
   REGISTRY: ghcr.io

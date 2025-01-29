@@ -1,42 +1,72 @@
 FROM python:3.13-slim-bookworm AS build-image
 
-WORKDIR /usr/local/bin/deployment
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y curl ca-certificates gnupg
-RUN apt-get install -y gcc g++ make libffi-dev git cargo
+WORKDIR /build
 
-COPY ./ /tmp/build
+RUN if [ -z "$ARCH" ]; then ARCH="$(uname -m)"; fi && \
+    apt update && \
+    apt upgrade -y && \
+#    apt install -y curl ca-certificates gnupg2 && \
+#    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg && \
+#    echo "deb https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+#    apt update && \
+    apt install -y --no-install-recommends gcc g++ make libffi-dev git cargo pkg-config
+#    apt install -y --no-install-recommends gcc g++ make postgresql-server-dev-17 libpq-dev libpq5 libffi-dev git cargo pkg-config && \
+#    mkdir -p /usr/lib/linux-gnu && \
+#    cp /usr/lib/${ARCH}-linux-gnu/libpq.so.* \
+#    /usr/lib/${ARCH}-linux-gnu/liblber-2.5.so.* \
+#    /usr/lib/${ARCH}-linux-gnu/libldap-2.5.so.* \
+#    /usr/lib/${ARCH}-linux-gnu/libsasl2.so.* \
+#    /usr/lib/${ARCH}-linux-gnu/libgobject-2.0.so.* \
+#    /usr/lib/linux-gnu/ && \
+#    mkdir -p /lib/linux-gnu && \
+#    cp /lib/${ARCH}-linux-gnu/libtirpc.so.* \
+#    /lib/${ARCH}-linux-gnu/libnfsidmap.so.* \
+#    /lib/${ARCH}-linux-gnu/libgssapi_krb5.so.* \
+#    /lib/${ARCH}-linux-gnu/libkrb5.so.* \
+#    /lib/${ARCH}-linux-gnu/libk5crypto.so.* \
+#    /lib/${ARCH}-linux-gnu/libcom_err.so.* \
+#    /lib/${ARCH}-linux-gnu/libkrb5support.so.* \
+#    /lib/linux-gnu/
 
-RUN  (cd /tmp/build \
-     && python3 -m venv py3env-dev \
-     && . py3env-dev/bin/activate \
-     && python3 -m pip install -U -r requirements_dev.txt \
-     && python3 setup.py bdist_wheel)
+COPY requirements_dev.txt requirements.txt ./
+RUN python3 -m pip install -U -r requirements_dev.txt && \
+    python3 -m pip wheel --wheel-dir /build/wheels -r requirements.txt
 
 
-RUN  export APP_HOME=/usr/local/bin/deployment \
-     && (cd $APP_HOME \
-         && python3 -m venv py3env \
-         && . py3env/bin/activate \
-         && python3 -m pip install -U pip \
-         && python3 -m pip install -U setuptools \
-         && python3 -m pip install -U wheel \
-         && python3 -m pip install -U --pre torch torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cu126 \
-         && python3 -m pip install -U /tmp/build/dist/*.whl)
+
+FROM python:3.13-slim-bookworm AS app
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+COPY --from=build-image /build/wheels /wheels
+
+#COPY --from=build-image /lib/linux-gnu/* /lib/linux-gnu/
+#COPY --from=build-image /usr/lib/linux-gnu/* /usr/lib/linux-gnu/
+
+#RUN if [ -z "$ARCH" ]; then ARCH="$(uname -m)"; fi && \
+#    cp /lib/linux-gnu/* /lib/${ARCH}-linux-gnu/ && \
+#    cp /usr/lib/linux-gnu/* /usr/lib/${ARCH}-linux-gnu/ && \
+#    rm -rf /lib/linux-gnu /usr/lib/linux-gnu
 
 
-FROM python:3.13-slim-bookworm
 
-ENV  PYTHONPATH=/usr/local/bin/deployment
+WORKDIR /app
 
-WORKDIR /usr/local/bin/deployment
-
-COPY --from=build-image /usr/local/bin/deployment/ ./
-
-RUN  groupadd -r appgroup \
-     && useradd -r -G appgroup -d /home/appuser appuser \
-     && install -d -o appuser -g appgroup /usr/local/bin/deployment/logs
+RUN python3 -m pip install -U --pre torch torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cu126 && \
+    python3 -m pip install --no-cache /wheels/* && \
+    apt clean && \
+    groupadd -r appgroup && \
+    useradd -r -G appgroup -d /app appuser && \
+    install -d -o appuser -g appgroup /app/logs && \
+    chown -Rc appuser:appgroup /app
 
 USER  appuser
-CMD ["/usr/local/bin/deployment/py3env/bin/python3", "-m", "dataset_format_benchmark"]
+COPY --chown=appuser . .
+EXPOSE 8000
+
+CMD ["python3", "-m", "dataset_format_benchmark"]

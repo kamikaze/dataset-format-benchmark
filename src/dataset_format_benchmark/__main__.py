@@ -1,8 +1,9 @@
 import argparse
 import logging
 import time
+from functools import partial
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Mapping
 
 import matplotlib.pyplot as plt
 import torch.utils.data
@@ -11,11 +12,9 @@ from torchvision.models import swin_v2_t
 
 from dataset_format_benchmark.datasets import PyTorchDataset
 from dataset_format_benchmark.datasets.own.transport import OwnTransportDataset
-from dataset_format_benchmark.models.inception import InceptionNet
 from dataset_format_benchmark.runner import benchmark_dataset
-from dataset_format_benchmark.storages.containers import NumpyZipImageStorage
 from dataset_format_benchmark.storages.fs import (
-    JPEGImageStorage, PNGImageStorage, BMPImageStorage, TIFFImageStorage
+    JPEGImageStorage, TIFFImageStorage
 )
 
 logger = logging.getLogger(__name__)
@@ -79,11 +78,11 @@ def main():
         # NumpyMmapImageStorage(),
         # CupyMmapImageStorage(),
     )
-    models: Sequence = (
-        # InceptionNet,
-        # DenseNet,
-        swin_v2_t(weights=None),
-    )
+    model_classes: Mapping = {
+        # 'InceptionNet': InceptionNet,
+        # 'DenseNet': DenseNet,
+        'SwinV2T': partial(swin_v2_t, weights=None),
+    }
 
     # Loading original dataset and storing in storages
     for dataset in datasets:
@@ -98,16 +97,24 @@ def main():
     # Testing models against all dataset storages and models
     for dataset in datasets:
         for storage in dataset.get_storages():
-            for model in models:
+            for model_class_name, model_class in model_classes.items():
                 dataset_class_name = dataset.__class__.__name__
-                model_class_name = model.__class__.__name__
 
                 try:
                     start_time = time.perf_counter()
                     logger.info(f'{start_time}: Benchmarking dataset{dataset_class_name} with {model_class_name} model')
                     pytorch_dataset = PyTorchDataset(dataset, storage)
-                    benchmark_dataset(pytorch_dataset, epochs, train_test_split, batch_size, learning_rate, use_cuda,
-                                      worker_count, device)
+                    benchmark_dataset(
+                        pytorch_dataset,
+                        model_class,
+                        epochs,
+                        train_test_split,
+                        batch_size,
+                        learning_rate,
+                        use_cuda,
+                        worker_count,
+                        device
+                    )
                     end_time = time.perf_counter()
                     logger.info(f'{end_time}: Benchmark took {end_time - start_time}')
                 except KeyboardInterrupt:

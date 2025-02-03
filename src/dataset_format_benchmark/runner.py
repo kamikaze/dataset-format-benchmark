@@ -71,8 +71,17 @@ def run_epoch(data_loaders: Mapping, model, loss_func, optimizer, metric_keys, s
     return metrics_epoch
 
 
-def benchmark_dataset(dataset: Dataset, epochs, train_test_split: float, batch_size: int, learning_rate: float,
-                      use_cuda: bool, worker_count: int, device=None):
+def benchmark_dataset(
+        dataset: Dataset,
+        model_class,
+        epochs: int,
+        train_test_split: float,
+        batch_size: int,
+        learning_rate: float,
+        use_cuda: bool,
+        worker_count: int,
+        device=None
+):
     train_test_split = int(len(dataset) * train_test_split)
     dataset_train, dataset_test = torch.utils.data.random_split(
         dataset,
@@ -96,7 +105,7 @@ def benchmark_dataset(dataset: Dataset, epochs, train_test_split: float, batch_s
         num_workers=worker_count
     )
 
-    model = InceptionNet()
+    model = model_class()
     loss_func = LossCrossEntropy()
     optimizer = torch.optim.RMSprop(model.parameters(), lr=learning_rate)
 

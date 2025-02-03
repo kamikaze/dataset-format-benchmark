@@ -1,9 +1,14 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from pathlib import Path
-from typing import Iterator, Generator, Sequence
+from typing import Generator, Sequence, Mapping
 
+import numpy as np
 import torch
 import torch.utils.data
+from PIL import Image
+from imageio.v3 import imread
+from torch import Tensor
+from torchvision import transforms
 
 from dataset_format_benchmark.storages import ImageFileStorage
 
@@ -20,13 +25,14 @@ class BaseDataset(torch.utils.data.Dataset, ABC):
         self.data_length = 0
         self.dataset_root_path = Path(root, self.DATASET_DIR_NAME)
         self.metadata_file_path = Path(self.dataset_root_path, 'metadata_fs.json')
+        self.metadata: Sequence[Mapping] | None = None
         self.filenames: Sequence[str] = []
         self.storages: list[ImageFileStorage] = []
 
     def add_storage(self, storage: ImageFileStorage):
         self.storages.append(storage)
 
-    def get_storages(self) -> list[ImageFileStorage]:
+    def get_storages(self) -> Sequence[ImageFileStorage]:
         return self.storages
 
     def iter_files(self, root: Path, recursive: bool = True) -> Generator[Path, None, None]:
@@ -36,20 +42,38 @@ class BaseDataset(torch.utils.data.Dataset, ABC):
             elif item.is_dir() and recursive and not item.name.startswith('.'):
                 yield from self.iter_files(item)
 
-    @abstractmethod
-    def iter_images(self, root: Path) -> Iterator:
-        pass
-
     def _download(self, force: bool = False):
         pass
 
-    @abstractmethod
-    def _prepare(self, force: bool = False):
+    def _load_metadata(self):
         pass
+
+    @staticmethod
+    def _load_image(image_path: Path) -> Image:
+        """Loads an image while preserving its original bit depth."""
+        image = imread(image_path)
+
+        # Handle multi-channel images (e.g., RGB) vs single-channel (grayscale)
+        if image.ndim == 2:  # Grayscale image
+            # 16-bit or 8-bit grayscale
+            mode = 'I;16' if image.dtype == np.uint16 else 'L'
+        elif image.ndim == 3 and image.shape[2] == 3:  # RGB image
+            mode = None  # Keep default
+        else:
+            raise ValueError(f'Unsupported image shape: {image.shape}')
+
+        return Image.fromarray(image, mode=mode) if mode else Image.fromarray(image)
+
+    @staticmethod
+    def _to_tensor(image: Image) -> Tensor:
+        if image.mode == 'I;16':
+            return torch.tensor(np.array(image), dtype=torch.float32)  # Keep 16-bit precision
+        else:
+            return transforms.ToTensor()(image)  # Standard 8-bit conversion
 
     def load(self, force_download: bool = False, force_prepare: bool = False):
         self._download(force_download or force_prepare)
-        self._prepare(force_prepare)
+        self._load_metadata()
 
     def __len__(self):
         return self.data_length

@@ -82,7 +82,7 @@ def main():
     models: Sequence = (
         # InceptionNet,
         # DenseNet,
-        swin_v2_t(weights=None)
+        swin_v2_t(weights=None),
     )
 
     # Loading original dataset and storing in storages
@@ -100,7 +100,7 @@ def main():
         for storage in dataset.get_storages():
             for model in models:
                 dataset_class_name = dataset.__class__.__name__
-                model_class_name = model.__name__
+                model_class_name = model.__class__.__name__
 
                 try:
                     start_time = time.perf_counter()

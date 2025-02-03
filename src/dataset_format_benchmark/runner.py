@@ -27,7 +27,8 @@ def run_epoch(data_loaders: Mapping, model, loss_func, optimizer, metric_keys, s
     metrics_epoch = {key: [] for key in metric_keys}
 
     for stage, data_loader in data_loaders.items():
-        for idx, (x, y) in enumerate(tqdm(data_loader)):
+        for item in enumerate(tqdm(data_loader)):
+            idx, (x, y) = item
             x_on_device = x.to(device=device, dtype=torch.float16, non_blocking=True)
             y_on_device = y.to(device=device, dtype=torch.float16, non_blocking=True)
 
@@ -98,12 +99,14 @@ def benchmark_dataset(dataset: Dataset, epochs, train_test_split: float, batch_s
     model = InceptionNet()
     loss_func = LossCrossEntropy()
     optimizer = torch.optim.RMSprop(model.parameters(), lr=learning_rate)
-    scaler = torch.cuda.amp.GradScaler()
 
     if use_cuda:
         model = model.to(device)
         # model = model.cuda()
         loss_func = loss_func.cuda()
+        scaler = torch.amp.GradScaler('cuda')
+    else:
+        scaler = torch.amp.GradScaler('cpu')
 
     metrics = {}
 

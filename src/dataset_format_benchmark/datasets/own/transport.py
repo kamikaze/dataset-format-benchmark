@@ -29,8 +29,8 @@ class VehicleBody(StrEnum):
 
 
 class LabelSet(Struct):
-    kind: str
-    body: str
+    kind: VehicleKind
+    body: VehicleBody
     color: str
     make: str
     model: str

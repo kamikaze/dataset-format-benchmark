@@ -18,7 +18,8 @@ class LossCrossEntropy(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, y, y_prim):
+    @staticmethod
+    def forward(y, y_prim):
         # return torch.mean(-y * torch.log(y_prim + 1e-8))
         return -torch.sum(y * torch.log(y_prim + 1e-20))
 

@@ -92,3 +92,16 @@ class OwnTransportDataset(BaseDataset):
     def _load_metadata(self):
         with open(self.metadata_file_path, 'rb') as f:
             self.metadata = msgspec.json.decode(f.read(), type=Sequence[DatasetItem])
+
+    # def load(self, force_download: bool = False, force_prepare: bool = False):
+    #     super().load(force_download, force_prepare)
+    #
+    #     with open(self.dataset.metadata_file_path) as f:
+    #         metadata = json.load(f)
+    #
+    #     self.dataset_shape = metadata['shape']
+    #     self.x = metadata['filenames']
+    #     self.y = metadata['labels']
+    #     self.data_length = len(self.y)
+    #
+    #     self.y = functional.one_hot(torch.tensor(self.y, dtype=torch.long))

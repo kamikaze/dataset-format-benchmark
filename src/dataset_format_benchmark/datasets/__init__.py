@@ -48,29 +48,6 @@ class BaseDataset(torch.utils.data.Dataset, ABC):
     def _load_metadata(self):
         pass
 
-    @staticmethod
-    def _load_image(image_path: Path) -> Image:
-        """Loads an image while preserving its original bit depth."""
-        image = imread(image_path)
-
-        # Handle multi-channel images (e.g., RGB) vs single-channel (grayscale)
-        if image.ndim == 2:  # Grayscale image
-            # 16-bit or 8-bit grayscale
-            mode = 'I;16' if image.dtype == np.uint16 else 'L'
-        elif image.ndim == 3 and image.shape[2] == 3:  # RGB image
-            mode = None  # Keep default
-        else:
-            raise ValueError(f'Unsupported image shape: {image.shape}')
-
-        return Image.fromarray(image, mode=mode) if mode else Image.fromarray(image)
-
-    @staticmethod
-    def _to_tensor(image: Image) -> Tensor:
-        if image.mode == 'I;16':
-            return torch.tensor(np.array(image), dtype=torch.float32)  # Keep 16-bit precision
-        else:
-            return transforms.ToTensor()(image)  # Standard 8-bit conversion
-
     def load(self, force_download: bool = False, force_prepare: bool = False):
         self._download(force_download or force_prepare)
         self._load_metadata()

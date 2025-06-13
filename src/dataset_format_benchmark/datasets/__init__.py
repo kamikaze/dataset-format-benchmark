@@ -35,13 +35,6 @@ class BaseDataset(torch.utils.data.Dataset, ABC):
     def get_storages(self) -> Sequence[ImageFileStorage]:
         return self.storages
 
-    def iter_files(self, root: Path, recursive: bool = True) -> Generator[Path, None, None]:
-        for item in root.iterdir():
-            if item.is_file():
-                yield item
-            elif item.is_dir() and recursive and not item.name.startswith('.'):
-                yield from self.iter_files(item)
-
     def _download(self, force: bool = False):
         pass
 
@@ -64,7 +57,7 @@ class PyTorchDataset(torch.utils.data.Dataset):
         self.storage = storage
 
     def __getitem__(self, index):
-        return self.storage[self.dataset[index]]
+        return self.storage.load_from_dataset(self.dataset, index)
 
     def __len__(self):
         return len(self.dataset)

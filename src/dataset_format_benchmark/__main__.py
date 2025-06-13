@@ -8,6 +8,7 @@ from typing import Sequence, Mapping
 import matplotlib.pyplot as plt
 import torch.utils.data
 from rawpy._rawpy import ColorSpace
+from torchvision import transforms
 from torchvision.models import swin_v2_t
 
 from dataset_format_benchmark.datasets import PyTorchDataset
@@ -49,9 +50,12 @@ def main():
     batch_size = 8
     learning_rate = 1e-8
     epochs = 100
+    transform = transforms.Compose((
+        transforms.ToTensor(),
+    ))
 
     datasets: Sequence = (
-        OwnTransportDataset(root=data_root_path),
+        OwnTransportDataset(root=data_root_path, transform=transform),
         # FaceMasksDataset(root=data_root_path),
         # WikiArtDataset(root=data_root_path),
         # NvidiaFFHQDataset(root=data_root_path),

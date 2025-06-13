@@ -60,8 +60,8 @@ class ImageFileStorage(ABC):
         else:
             return transforms.ToTensor()(image)  # Standard 8-bit conversion
 
-    def __getitem__(self, index):
-        x_path = str(Path(self.dataset.dataset_subdir_path, self.x[index]))
+    def load_from_dataset(self, dataset, index):
+        x_path = str(Path(dataset.dataset_subdir_path, dataset.x[index]))
 
         with Image.open(x_path) as image:
             x = np.asarray(image)

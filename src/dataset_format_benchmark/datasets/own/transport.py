@@ -76,11 +76,10 @@ class OwnTransportDataset(BaseDataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> tuple[Image, Mapping]:
         item = self.data[idx]
         image_path = self.dataset_root_path / item['image']
         image = self._load_image(image_path)
-        image_tensor = self._to_tensor(image)
 
         if self.transform:
             image = self.transform(image_tensor)
@@ -92,6 +91,7 @@ class OwnTransportDataset(BaseDataset):
     def _load_metadata(self):
         with open(self.metadata_file_path, 'rb') as f:
             self.metadata = msgspec.json.decode(f.read(), type=Sequence[DatasetItem])
+            self.data_length = len(self.metadata)
 
     # def load(self, force_download: bool = False, force_prepare: bool = False):
     #     super().load(force_download, force_prepare)

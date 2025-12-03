@@ -2,7 +2,7 @@ services:
   dataset-format-benchmark:
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     image: dataset-format-benchmark
     container_name: dataset-format-benchmark
     environment:

@@ -1,6 +1,6 @@
 #[ Build system ]
 [build-system]
-requires = ["setuptools>=60.5", "wheel"]
+requires = ["setuptools>=60.5", "setuptools_scm", "wheel"]
 build-backend = "setuptools.build_meta"
 
 #[ Project metadata and dependencies (PEP 621) ]
@@ -9,7 +9,7 @@ name = "dataset-format-benchmark"
 dynamic = ["version"]
 description = "Image dataset format benchmark"
 readme = { file = "README.rst", content-type = "text/x-rst; charset=UTF-8" }
-requires-python = "==3.13.9"
+requires-python = "==3.13.11"
 license = { file = "LICENSE" }
 authors = [
     { name = "Oleg Korsak", email = "kamikaze.is.waiting.you@gmail.com" }
@@ -19,18 +19,18 @@ classifiers = [
     "Programming Language :: Python",
 ]
 dependencies = [
-    "Cython==3.2.2",
+    "Cython==3.2.3",
     "h5py==3.15.1",
     "imageio[freeimage,pillow,pyav]==2.37.2",
     "kaggle==1.8.2",
     "lightning==2.6.0",
-    "matplotlib==3.10.7",
+    "matplotlib==3.10.8",
     "msgspec==0.20.0",
     "numpy==2.3.5",
     "Pillow==12.0.0",
     "pkgconfig==1.5.5",
     "rawpy==0.25.1",
-    "scikit-learn==1.7.2",
+    "scikit-learn==1.8.0",
     "scipy==1.16.3",
     "seaborn==0.13.2",
     "torch",
@@ -51,6 +51,7 @@ cuda = [
 dev = [
     "pip",
     "setuptools",
+    "setuptools_scm",
     "twine",
     "wheel",
 ]
